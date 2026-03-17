@@ -1,63 +1,451 @@
 <!DOCTYPE html>
 <html lang="uk">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Screen Recorder</title>
-    <link rel="stylesheet" href="style.css">
-</head>
+<meta charset="UTF-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.15);
+    --accent: #e84d4d;
+    --accent2: #ff7a5c;
+    --text: #f0efe8;
+    --muted: rgba(240,239,232,0.45);
+    --green: #4ade80;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Syne', sans-serif;
+  }
+
+  body {
+    font-family: var(--display);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .app { width: 100%; max-width: 560px; padding: 2rem; position: relative; }
+
+  /* OVERLAY */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(13,13,15,0.96);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100;
+    animation: fadeIn 0.3s ease;
+  }
+  .overlay.hidden { display: none; }
+
+  @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px) } to { opacity: 1; transform: translateY(0) } }
+
+  .modal {
+    background: var(--surface);
+    border: 0.5px solid var(--border2);
+    border-radius: 20px;
+    padding: 2.5rem;
+    width: 90%; max-width: 440px;
+    animation: slideUp 0.35s cubic-bezier(0.22,1,0.36,1);
+  }
+
+  .modal-icon {
+    width: 56px; height: 56px;
+    border-radius: 16px;
+    background: rgba(232,77,77,0.12);
+    border: 0.5px solid rgba(232,77,77,0.3);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1.5rem;
+  }
+  .modal-icon svg { width: 26px; height: 26px; }
+
+  .modal h2 { font-size: 22px; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.5px; }
+  .modal p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 0.75rem; }
+  .modal p strong { color: var(--text); font-weight: 700; }
+
+  .steps {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .step {
+    display: flex; align-items: flex-start; gap: 12px;
+    font-size: 13px; color: var(--muted); line-height: 1.5;
+  }
+  .step-num {
+    min-width: 22px; height: 22px;
+    border-radius: 50%;
+    background: rgba(232,77,77,0.15);
+    border: 0.5px solid rgba(232,77,77,0.4);
+    font-size: 11px; font-weight: 700; color: var(--accent2);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono);
+    margin-top: 1px;
+  }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 0.75rem 1.75rem;
+    border-radius: 12px;
+    font-family: var(--display);
+    font-weight: 700; font-size: 15px;
+    cursor: pointer; border: none;
+    transition: all 0.15s ease;
+    letter-spacing: -0.2px;
+  }
+  .btn:active { transform: scale(0.97); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    width: 100%;
+  }
+  .btn-primary:hover { background: #f05555; }
+
+  .btn-outline {
+    background: transparent;
+    border: 0.5px solid var(--border2);
+    color: var(--text);
+  }
+  .btn-outline:hover { background: var(--surface2); }
+
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 13px; padding: 0.6rem 1.2rem;
+  }
+  .btn-ghost:hover { color: var(--text); }
+
+  .btn-green {
+    background: rgba(74,222,128,0.15);
+    border: 0.5px solid rgba(74,222,128,0.35);
+    color: var(--green);
+    font-weight: 700;
+  }
+  .btn-green:hover { background: rgba(74,222,128,0.22); }
+
+  .btn-danger {
+    background: rgba(232,77,77,0.12);
+    border: 0.5px solid rgba(232,77,77,0.3);
+    color: var(--accent2);
+    font-weight: 700;
+  }
+  .btn-danger:hover { background: rgba(232,77,77,0.2); }
+
+  /* MAIN UI */
+  .header { margin-bottom: 2.5rem; }
+  .header h1 {
+    font-size: 30px; font-weight: 800; letter-spacing: -1px;
+    background: linear-gradient(135deg, #f0efe8, rgba(240,239,232,0.55));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header p { font-size: 13px; color: var(--muted); margin-top: 4px; font-family: var(--mono); }
+
+  /* SCREEN STATE */
+  #screen-start, #screen-recording, #screen-review { display: none; }
+  #screen-start.active, #screen-recording.active, #screen-review.active { display: block; }
+
+  /* START SCREEN */
+  .start-btn-wrap { display: flex; flex-direction: column; gap: 12px; }
+  .rec-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+  }
+  .rec-card-label { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 1.5rem; font-family: var(--mono); }
+
+  /* TIMER */
+  .timer-display {
+    font-family: var(--mono);
+    font-size: 54px;
+    font-weight: 500;
+    letter-spacing: -2px;
+    color: var(--text);
+    margin: 0.5rem 0 1.5rem;
+    line-height: 1;
+  }
+  .timer-display.pulse { animation: pulse 1s ease-in-out infinite alternate; }
+  @keyframes pulse { from { opacity: 1 } to { opacity: 0.6 } }
+
+  .rec-indicator {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 700; color: var(--accent2);
+    font-family: var(--mono); letter-spacing: 0.5px;
+    margin-bottom: 1rem;
+  }
+  .rec-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    animation: blink 1s step-end infinite;
+  }
+  @keyframes blink { 0%,100% { opacity: 1 } 50% { opacity: 0 } }
+
+  .action-row { display: flex; gap: 10px; margin-top: 1.5rem; }
+  .action-row .btn { flex: 1; }
+
+  /* VIDEO PREVIEW */
+  #video-preview {
+    width: 100%; aspect-ratio: 16/9;
+    border-radius: 12px;
+    background: #000;
+    border: 0.5px solid var(--border2);
+    object-fit: contain;
+    display: block;
+    margin-bottom: 1rem;
+  }
+
+  /* FILE NAME MODAL */
+  .input-styled {
+    width: 100%;
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+    margin: 1rem 0 1.25rem;
+    transition: border-color 0.15s;
+  }
+  .input-styled:focus { border-color: rgba(232,77,77,0.6); }
+  .input-styled::placeholder { color: var(--muted); }
+
+  .modal-btns { display: flex; gap: 10px; }
+  .modal-btns .btn { flex: 1; }
+
+  /* Status tag */
+  .status-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--green); font-family: var(--mono);
+    background: rgba(74,222,128,0.08);
+    border: 0.5px solid rgba(74,222,128,0.2);
+    border-radius: 6px; padding: 4px 10px;
+    margin-bottom: 1rem;
+  }
+
+  .divider { height: 0.5px; background: var(--border); margin: 1.25rem 0; }
+</style>
+</head>
 <body>
 
-    <div class="app">
-
-        <!-- Інструкція -->
-        <div id="instructionScreen" class="card">
-            <h2>🎥 Screen Recorder</h2>
-            <p class="subtitle">Як користуватись</p>
-
-            <ul>
-                <li>Натисни Start Recording</li>
-                <li>Обери екран або вкладку</li>
-                <li>Зупини запис</li>
-                <li>Переглянь відео</li>
-                <li>Збережи файл</li>
-            </ul>
-
-            <button id="okBtn" class="primary">Почати</button>
-        </div>
-
-        <!-- Запис -->
-        <div id="recordScreen" class="card hidden">
-            <h2>Запис екрану</h2>
-            <p id="status">Готовий до запису</p>
-            <button id="startBtn" class="primary">Start</button>
-        </div>
-
-        <!-- Floating Controls -->
-        <div id="floatingControls">
-            <span class="recDot">●</span>
-            <span id="timer">00:00</span>
-            <button id="stopBtn" class="danger">Stop</button>
-        </div>
-
-        <!-- Preview + Save -->
-        <div id="previewScreen" class="card hidden">
-            <h2>Перегляд</h2>
-            <video id="preview" controls></video>
-            <button id="saveBtn" class="primary">Зберегти</button>
-        </div>
-        <!-- Модальне вікно з overlay -->
-        <div id="saveModal" class="hidden modal-overlay">
-            <div class="modal card">
-                <h2>Назва файлу</h2>
-                <input type="text" id="fileNameInput" placeholder="my-video">
-                <button id="confirmSaveBtn" class="primary">Зберегти</button>
-            </div>
-        </div>
+<!-- INSTRUCTION OVERLAY -->
+<div class="overlay" id="overlay-intro">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#e84d4d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+      </svg>
     </div>
+    <h2>Запис екрану</h2>
+    <p>Цей інструмент дозволяє <strong>записувати ваш екран</strong> прямо з браузера. Ось як це працює:</p>
+    <div class="steps">
+      <div class="step"><div class="step-num">1</div><span>Натисніть <strong>«Почати запис»</strong> — браузер попросить дозвіл на захоплення екрану.</span></div>
+      <div class="step"><div class="step-num">2</div><span>Оберіть вікно, вкладку або весь екран для запису та підтвердіть.</span></div>
+      <div class="step"><div class="step-num">3</div><span>Натисніть <strong>«Зупинити»</strong> коли готово — ви зможете переглянути запис.</span></div>
+      <div class="step"><div class="step-num">4</div><span>Якщо все ок — <strong>збережіть</strong> файл. Якщо ні — запишіть знову.</span></div>
+    </div>
+    <button class="btn btn-primary" onclick="closeIntro()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      Зрозуміло, поїхали!
+    </button>
+  </div>
+</div>
 
-    <script src="script.js"></script>
+<!-- FILENAME OVERLAY -->
+<div class="overlay hidden" id="overlay-save">
+  <div class="modal">
+    <div class="modal-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#e84d4d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+      </svg>
+    </div>
+    <h2>Зберегти запис</h2>
+    <p>Введіть назву файлу для вашого відео. Формат WebM.</p>
+    <input class="input-styled" id="filename-input" type="text" placeholder="мій-запис-екрану" value="запис-екрану" />
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeSave()">Скасувати</button>
+      <button class="btn btn-primary" onclick="doSave()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Завантажити
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app">
+  <div class="header">
+    <h1>Запис екрану</h1>
+    <p>// screen recorder — browser native</p>
+  </div>
+
+  <!-- START SCREEN -->
+  <div id="screen-start" class="active">
+    <div class="rec-card">
+      <div class="rec-card-label">Готовий до запису</div>
+      <p style="font-size:14px; color:var(--muted); line-height:1.7; margin-bottom:1.5rem;">Браузер використовує <strong style="color:var(--text)">MediaRecorder API</strong> — нічого не завантажується на сервер. Все залишається у вас.</p>
+      <button class="btn btn-primary" id="btn-start" onclick="startRecording()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>
+        Почати запис
+      </button>
+    </div>
+  </div>
+
+  <!-- RECORDING SCREEN -->
+  <div id="screen-recording">
+    <div class="rec-card">
+      <div class="rec-indicator">
+        <div class="rec-dot"></div>
+        REC
+      </div>
+      <div class="timer-display pulse" id="timer">00:00:00</div>
+      <div style="font-size:13px; color:var(--muted); font-family:var(--mono);">іде запис...</div>
+      <div class="action-row">
+        <button class="btn btn-danger" onclick="stopRecording()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+          Зупинити
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVIEW SCREEN -->
+  <div id="screen-review">
+    <div class="status-tag">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg>
+      Запис завершено
+    </div>
+    <video id="video-preview" controls></video>
+    <div class="action-row">
+      <button class="btn btn-ghost" onclick="reRecord()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg>
+        Перезаписати
+      </button>
+      <button class="btn btn-green" onclick="openSave()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Зберегти
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let mediaRecorder = null;
+  let chunks = [];
+  let videoBlob = null;
+  let timerInterval = null;
+  let seconds = 0;
+  let stream = null;
+
+  function closeIntro() {
+    document.getElementById('overlay-intro').classList.add('hidden');
+  }
+
+  function showScreen(name) {
+    ['start','recording','review'].forEach(s => {
+      const el = document.getElementById('screen-' + s);
+      el.classList.remove('active');
+    });
+    document.getElementById('screen-' + name).classList.add('active');
+  }
+
+  function formatTime(s) {
+    const h = Math.floor(s / 3600).toString().padStart(2,'0');
+    const m = Math.floor((s % 3600) / 60).toString().padStart(2,'0');
+    const sec = (s % 60).toString().padStart(2,'0');
+    return h + ':' + m + ':' + sec;
+  }
+
+  async function startRecording() {
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      chunks = [];
+      mediaRecorder = new MediaRecorder(stream, { mimeType: getSupportedMime() });
+      mediaRecorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+      mediaRecorder.onstop = handleStop;
+      mediaRecorder.start(1000);
+
+      stream.getVideoTracks()[0].onended = () => stopRecording();
+
+      seconds = 0;
+      document.getElementById('timer').textContent = '00:00:00';
+      timerInterval = setInterval(() => {
+        seconds++;
+        document.getElementById('timer').textContent = formatTime(seconds);
+      }, 1000);
+
+      showScreen('recording');
+    } catch(err) {
+      alert('Не вдалося отримати дозвіл на запис. Перевірте налаштування браузера.\n\n' + err.message);
+    }
+  }
+
+  function getSupportedMime() {
+    const types = ['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm','video/mp4'];
+    return types.find(t => MediaRecorder.isTypeSupported(t)) || '';
+  }
+
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    clearInterval(timerInterval);
+  }
+
+  function handleStop() {
+    videoBlob = new Blob(chunks, { type: chunks[0]?.type || 'video/webm' });
+    const url = URL.createObjectURL(videoBlob);
+    const vid = document.getElementById('video-preview');
+    vid.src = url;
+    showScreen('review');
+  }
+
+  function reRecord() {
+    videoBlob = null;
+    chunks = [];
+    document.getElementById('video-preview').src = '';
+    showScreen('start');
+  }
+
+  function openSave() {
+    document.getElementById('overlay-save').classList.remove('hidden');
+    document.getElementById('filename-input').focus();
+    document.getElementById('filename-input').select();
+  }
+
+  function closeSave() {
+    document.getElementById('overlay-save').classList.add('hidden');
+  }
+
+  function doSave() {
+    if (!videoBlob) return;
+    let name = document.getElementById('filename-input').value.trim() || 'запис-екрану';
+    const ext = videoBlob.type.includes('mp4') ? '.mp4' : '.webm';
+    if (!name.endsWith(ext)) name += ext;
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(videoBlob);
+    a.download = name;
+    a.click();
+    closeSave();
+  }
+
+  document.getElementById('filename-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSave();
+    if (e.key === 'Escape') closeSave();
+  });
+</script>
 </body>
-
 </html>
