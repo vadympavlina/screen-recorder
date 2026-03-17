@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="uk">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Screen Recorder</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Інструкція -->
+        <div id="instructionScreen" class="card">
+            <h2>🎥 Screen Recorder</h2>
+            <p class="subtitle">Як користуватись</p>
+
+            <ul>
+                <li>Натисни Start Recording</li>
+                <li>Обери екран або вкладку</li>
+                <li>Зупини запис</li>
+                <li>Переглянь відео</li>
+                <li>Збережи файл</li>
+            </ul>
+
+            <button id="okBtn" class="primary">Почати</button>
+        </div>
+
+        <!-- Запис -->
+        <div id="recordScreen" class="card hidden">
+            <h2>Запис екрану</h2>
+            <p id="status">Готовий до запису</p>
+            <button id="startBtn" class="primary">Start</button>
+        </div>
+
+        <!-- Floating Controls -->
+        <div id="floatingControls">
+            <span class="recDot">●</span>
+            <span id="timer">00:00</span>
+            <button id="stopBtn" class="danger">Stop</button>
+        </div>
+
+        <!-- Preview + Save -->
+        <div id="previewScreen" class="card hidden">
+            <h2>Перегляд</h2>
+            <video id="preview" controls></video>
+            <button id="saveBtn" class="primary">Зберегти</button>
+        </div>
+        <!-- Модальне вікно з overlay -->
+        <div id="saveModal" class="hidden modal-overlay">
+            <div class="modal card">
+                <h2>Назва файлу</h2>
+                <input type="text" id="fileNameInput" placeholder="my-video">
+                <button id="confirmSaveBtn" class="primary">Зберегти</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

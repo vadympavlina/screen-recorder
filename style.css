@@ -1,0 +1,125 @@
+body {
+  margin: 0;
+  font-family: Inter, Arial;
+  background: linear-gradient(135deg, #0f0f0f, #1a1a1a);
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.app { width: 100%; max-width: 500px; }
+
+.card {
+  background: #1f1f1f;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  animation: fadeIn 0.4s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px);}
+  to { opacity: 1; transform: translateY(0);}
+}
+
+.hidden { display: none; }
+
+h2 { margin-bottom: 10px; }
+
+.subtitle { opacity: 0.7; margin-bottom: 20px; }
+
+ul { text-align: left; margin-bottom: 20px; }
+li { margin: 8px 0; }
+
+button {
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: 0.2s;
+  width: 100%;
+}
+
+.primary { background: linear-gradient(135deg, #ff4d6d, #ff2e55); color: white; margin-top: 20px; }
+.primary:hover { transform: scale(1.03); }
+
+.danger { background: #333; color: #ff4d6d; }
+
+video { width: 100%; border-radius: 12px; margin-top: 15px; }
+
+#floatingControls {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30,30,30,0.95);
+  padding: 8px 15px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  z-index: 9999;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+}
+
+.recDot {
+  color: red;
+  font-size: 18px;
+  animation: blink 1s infinite;
+}
+
+@keyframes blink {
+  0%,50%,100% {opacity:1;}
+  25%,75% {opacity:0;}
+}
+
+#timer { font-family: monospace; font-size: 16px; }
+
+/* Overlay для модалки */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6); /* темний фон позаду */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+/* Власне модальне вікно */
+.modal {
+  background: #1f1f1f;
+  padding: 25px 30px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  animation: popup 0.3s ease;
+}
+
+@keyframes popup {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.modal input {
+  margin-top: 15px;
+  padding: 10px;
+  width: 90%;
+  border-radius: 8px;
+  border: none;
+}
+
+.modal button {
+  margin-top: 15px;
+}
